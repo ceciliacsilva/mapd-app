@@ -1,0 +1,24 @@
+{
+  "name": "scalable-vega",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "git@github.com:vega/scalable-vega.git",
+  "author": "Dominik Moritz <domoritz@gmail.com>",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "dependencies": {
+    "@mapd/connector": "^4.8.0",
+    "gh-pages": "^2.1.1",
+    "vega": "^5.7.0",
+    "vega-transform-omnisci-core": "^0.0.9"
+  },
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build --public-url '/scalable-vega/' index.html",
+    "deploy": "yarn build && gh-pages -d dist"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.3",
+    "typescript": "^3.6.3"
+  }
+}
