@@ -17,38 +17,22 @@ connection.connectAsync().then(session => {
 
     // assign session to OmniSci Core transform
     QueryCore.session(session);
-    
+
     // add core transforms
     (vega as any).transforms["querycore"] = QueryCore;
-    
+
     const runtime = vega.parse(spec);
     const view = new vega.View(runtime)
         .logLevel(vega.Info)
         .renderer("svg")
         .initialize(document.querySelector("#view"));
-    
+
     view.runAsync();
 
     // assign view and vega to window so we can debug them
     window["vega"] = vega;
     window["view"] = view;
 });
-
-// transform to compute the extent
-// const extent = {
-//     type: "querycore",
-//     query: {
-//         signal: `'select min(' + field + ') as "min", max(' + field + ') as "max" from ${table}'`
-//     }
-// } as any;
-
-// bin and aggregate
-const data = {
-    type: "querycore",
-    query: {
-        signal: `'select ' + bins.step + ' * floor((' + field + '-cast(' + bins.start + ' as float))/' + bins.step + ') as "bin_start", count(*) as "cnt" from ${table} where ' + field + ' between ' + bins.start + ' and ' + bins.stop + ' group by bin_start'`
-    }
-} as any;
 
 const extent = {
     type: "querycore",
@@ -62,29 +46,6 @@ const spec: vega.Spec = {
   "padding": 5,
 
   "data": [
-    // {
-    //     "name": "table",
-    //     // "values": [
-    //     //     { "amount": 28},
-    //     //     { "amount": 55},
-    //     //     { "amount": 43},
-    //     //     { "amount": 91},
-    //     //     { "amount": 81},
-    //     //     { "amount": 53},
-    //     //     { "amount": 19},
-    //     //     { "amount": 87}
-    //     // ]
-    //     // "values": [
-    //     //     {"category": "A", "amount": 28},
-    //     //     {"category": "B", "amount": 55},
-    //     //     {"category": "C", "amount": 43},
-    //     //     {"category": "D", "amount": 91},
-    //     //     {"category": "E", "amount": 81},
-    //     //     {"category": "F", "amount": 53},
-    //     //     {"category": "G", "amount": 19},
-    //     //     {"category": "H", "amount": 87}
-    //     // ]
-    // }
       {
           "name": "table",
           "transform": [ extent ] 
