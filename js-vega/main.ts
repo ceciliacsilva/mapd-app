@@ -34,26 +34,26 @@ connection.connectAsync().then(session => {
     window["view"] = view;
 });
 
-// connection.connectAsync().then(session => {
+connection.connectAsync().then(session => {
 
-//     // assign session to OmniSci Core transform
-//     QueryCore.session(session);
+    // assign session to OmniSci Core transform
+    QueryCore.session(session);
 
-//     // add core transforms
-//     (vega as any).transforms["querycore"] = QueryCore;
+    // add core transforms
+    (vega as any).transforms["querycore"] = QueryCore;
 
-//     const runtime = vega.parse(spec2);
-//     const view = new vega.View(runtime)
-//         .logLevel(vega.Info)
-//         .renderer("svg")
-//         .initialize(document.querySelector("#view2"));
+    const runtime = vega.parse(spec2);
+    const view = new vega.View(runtime)
+        .logLevel(vega.Info)
+        .renderer("svg")
+        .initialize(document.querySelector("#view2"));
 
-//     view.runAsync();
+    view.runAsync();
 
-//     // assign view and vega to window so we can debug them
-//     window["vega"] = vega;
-//     window["view2"] = view;
-// });
+    // assign view and vega to window so we can debug them
+    window["vega"] = vega;
+    window["view2"] = view;
+});
 
 connection.connectAsync().then(session => {
 
@@ -250,14 +250,25 @@ const spec2: vega.Spec = {
 
 const query_coordenadas_paralelas = {
     type: "querycore",
-    query: "SELECT taxiin, distance FROM flights_2008_7M GROUP BY taxiin, distance limit 10"
+    // query: "SELECT taxiin, plane_year, distance FROM flights_2008_7M GROUP BY taxiin, distance, plane_year limit 10"
+    query: "SELECT taxiin, distance, plane_year FROM flights_2008_7M GROUP BY taxiin, distance, plane_year limit 50"
 } as any;
 
 const spec3: vega.Spec = {
-  "$schema": "https://vega.github.io/schema/vega/v5.json",
-  "width": 400,
-  "height": 200,
-  "padding": 5,
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 400,
+    "height": 300,
+    "padding": 5,
+    "config": {
+        "axisY": {
+            "titleX": -2,
+            "titleY": 310,
+            "titleAngle": 0,
+            "titleAlign": "right",
+            "titleBaseline": "top"
+        }
+    },
+
 
   "data": [
       {
@@ -267,10 +278,9 @@ const spec3: vega.Spec = {
       {
           "name": "fields",
           "values": [
-              // "plane_type",
-              // "plane_model",
               "taxiin",
-              "distance"
+              "distance",
+              "plane_year"
           ]
       }
   ],
@@ -290,9 +300,30 @@ const spec3: vega.Spec = {
             "name": "distance", "type": "linear",
             "range": "height", "zero": false, "nice": true,
             "domain": {"data": "cars", "field": "distance"}
+        },
+        {
+            "name": "plane_year", "type": "linear",
+            "range": "height", "zero": false, "nice": true,
+            "domain": {"data": "cars", "field": "plane_year"}
         }
     ],
-
+    "axes": [
+        {
+            "orient": "left", "zindex": 1,
+            "scale": "taxiin", "title": "Taxi In",
+            "offset": {"scale": "ord", "value": "taxiin", "mult": -1}
+        },
+        {
+            "orient": "left", "zindex": 1,
+            "scale": "distance", "title": "Distance",
+            "offset": {"scale": "ord", "value": "distance", "mult": -1}
+        },
+        {
+            "orient": "left", "zindex": 1,
+            "scale": "plane_year", "title": "Plane Year",
+            "offset": {"scale": "ord", "value": "plane_year", "mult": -1}
+        },
+    ]
 
     "marks": [
         {
