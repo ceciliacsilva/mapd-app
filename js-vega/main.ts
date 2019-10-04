@@ -34,6 +34,27 @@ connection.connectAsync().then(session => {
     window["view"] = view;
 });
 
+// connection.connectAsync().then(session => {
+
+//     // assign session to OmniSci Core transform
+//     QueryCore.session(session);
+
+//     // add core transforms
+//     (vega as any).transforms["querycore"] = QueryCore;
+
+//     const runtime = vega.parse(spec2);
+//     const view = new vega.View(runtime)
+//         .logLevel(vega.Info)
+//         .renderer("svg")
+//         .initialize(document.querySelector("#view2"));
+
+//     view.runAsync();
+
+//     // assign view and vega to window so we can debug them
+//     window["vega"] = vega;
+//     window["view2"] = view;
+// });
+
 connection.connectAsync().then(session => {
 
     // assign session to OmniSci Core transform
@@ -42,11 +63,11 @@ connection.connectAsync().then(session => {
     // add core transforms
     (vega as any).transforms["querycore"] = QueryCore;
 
-    const runtime = vega.parse(spec2);
+    const runtime = vega.parse(spec3);
     const view = new vega.View(runtime)
         .logLevel(vega.Info)
         .renderer("svg")
-        .initialize(document.querySelector("#view2"));
+        .initialize(document.querySelector("#view3"));
 
     view.runAsync();
 
@@ -54,7 +75,6 @@ connection.connectAsync().then(session => {
     window["vega"] = vega;
     window["view2"] = view;
 });
-
 const query_origin_state = {
     type: "querycore",
     query: "select origin_state as category, count(origin_state) as amount from flights_2008_7M GROUP by origin_state limit 10"
@@ -226,4 +246,76 @@ const spec2: vega.Spec = {
       }
     },
   ]
+}
+
+const query_coordenadas_paralelas = {
+    type: "querycore",
+    query: "SELECT taxiin, distance FROM flights_2008_7M GROUP BY taxiin, distance limit 10"
+} as any;
+
+const spec3: vega.Spec = {
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 400,
+  "height": 200,
+  "padding": 5,
+
+  "data": [
+      {
+          "name": "cars",
+          "transform": [ query_coordenadas_paralelas ]
+      },
+      {
+          "name": "fields",
+          "values": [
+              // "plane_type",
+              // "plane_model",
+              "taxiin",
+              "distance"
+          ]
+      }
+  ],
+
+    "scales": [
+        {
+            "name": "ord", "type": "point",
+            "range": "width", "round": true,
+            "domain": {"data": "fields", "field": "data"}
+        },
+        {
+            "name": "taxiin", "type": "linear",
+            "range": "height", "zero": false, "nice": true,
+            "domain": {"data": "cars", "field": "taxiin"}
+        },
+        {
+            "name": "distance", "type": "linear",
+            "range": "height", "zero": false, "nice": true,
+            "domain": {"data": "cars", "field": "distance"}
+        }
+    ],
+
+
+    "marks": [
+        {
+            "type": "group",
+            "from": {"data": "cars"},
+            "marks": [
+                {
+                    "type": "line",
+                    "from": {"data": "fields"},
+                    "encode": {
+                        "enter": {
+                            "x": {"scale": "ord", "field": "data"},
+                            "y": {
+                                "scale": {"datum": "data"},
+                                "field": {"parent": {"datum": "data"}}
+                            },
+                            "stroke": {"value": "steelblue"},
+                            "strokeWidth": {"value": 1.01},
+                            "strokeOpacity": {"value": 0.3}
+                        }
+                    }
+                }
+            ]
+        }
+    ]
 }
