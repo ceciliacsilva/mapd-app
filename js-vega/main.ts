@@ -73,8 +73,30 @@ connection.connectAsync().then(session => {
 
     // assign view and vega to window so we can debug them
     window["vega"] = vega;
-    window["view2"] = view;
+    window["view3"] = view;
 });
+
+connection.connectAsync().then(session => {
+
+    // assign session to OmniSci Core transform
+    QueryCore.session(session);
+
+    // add core transforms
+    (vega as any).transforms["querycore"] = QueryCore;
+
+    const runtime = vega.parse(spec4);
+    const view = new vega.View(runtime)
+        .logLevel(vega.Info)
+        .renderer("svg")
+        .initialize(document.querySelector("#view4"));
+
+    view.runAsync();
+
+    // assign view and vega to window so we can debug them
+    window["vega"] = vega;
+    window["view4"] = view;
+});
+
 const query_origin_state = {
     type: "querycore",
     query: "select origin_state as category, count(origin_state) as amount from flights_2008_7M GROUP by origin_state limit 10"
@@ -175,8 +197,8 @@ const query_arrival_delay = {
 
 const spec2: vega.Spec = {
   "$schema": "https://vega.github.io/schema/vega/v5.json",
-  "width": 400,
-  "height": 200,
+  "width": 600,
+  "height": 400,
   "padding": 5,
 
   "data": [
@@ -215,14 +237,16 @@ const spec2: vega.Spec = {
       {
           "orient": "bottom",
           "scale": "xscale",
-          "labels": false,
+          "labels": true,
+          // "values": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
+          "bandPosition": 0,
           "domain": false,
           "ticks": false,
       },
       {
           "orient": "left",
           "scale": "yscale",
-          "labels": false,
+          // "labels": false,
           "domain": false,
           "ticks": false,
       }
@@ -235,7 +259,7 @@ const spec2: vega.Spec = {
       "encode": {
         "enter": {
             "x": { "scale": "xscale", "field": "flight_month" },
-            "width": { "value": 35 },
+            "width": { "value": 50 },
             "y": { "scale": "yscale", "field": "flight_dayofmonth" },
             "height": {"scale": "yscale", "band": 1},
             "tooltip": {"signal": "{'month': datum.flight_month}"}
@@ -250,8 +274,9 @@ const spec2: vega.Spec = {
 
 const query_coordenadas_paralelas = {
     type: "querycore",
-    // query: "SELECT taxiin, plane_year, distance FROM flights_2008_7M GROUP BY taxiin, distance, plane_year limit 10"
-    query: "SELECT taxiin, distance, plane_year FROM flights_2008_7M GROUP BY taxiin, distance, plane_year limit 50"
+    // query: "SELECT flight_month, distance, plane_year FROM flights_2008_7M GROUP BY flight_month, distance, plane_year limit 200"
+    // query: "SELECT flight_month, avg(distance) as avg_distance, AVG(airtime) as avg_airtime, AVG(arrdelay) + AVG(depdelay) as avg_delay, SUM(cancelled) as sum_cancelled FROM flights_2008_7M GROUP BY flight_month"
+    query: "SELECT flight_month, distance, airtime, arrdelay + depdelay as delay, plane_year FROM flights_2008_7M where MOD(rowid, 20000) = 1"
 } as any;
 
 const spec3: vega.Spec = {
@@ -278,9 +303,11 @@ const spec3: vega.Spec = {
       {
           "name": "fields",
           "values": [
-              "taxiin",
+              "flight_month",
               "distance",
-              "plane_year"
+              "airtime",
+              // "plane_year",
+              "delay",
           ]
       }
   ],
@@ -292,9 +319,9 @@ const spec3: vega.Spec = {
             "domain": {"data": "fields", "field": "data"}
         },
         {
-            "name": "taxiin", "type": "linear",
+            "name": "flight_month", "type": "linear",
             "range": "height", "zero": false, "nice": true,
-            "domain": {"data": "cars", "field": "taxiin"}
+            "domain": {"data": "cars", "field": "flight_month"}
         },
         {
             "name": "distance", "type": "linear",
@@ -302,28 +329,50 @@ const spec3: vega.Spec = {
             "domain": {"data": "cars", "field": "distance"}
         },
         {
-            "name": "plane_year", "type": "linear",
+            "name": "airtime", "type": "linear",
             "range": "height", "zero": false, "nice": true,
+            "domain": {"data": "cars", "field": "airtime"}
+        },
+        {
+            "name": "delay", "type": "linear",
+            "range": "height", "zero": false, "nice": true,
+            "domain": {"data": "cars", "field": "delay"}
+        },
+        // colors doesn't work.
+        {
+            "name": "plane_year", "type": "linear",
+            // "zero": false, "nice": true, 
+            "range": { "scheme": "plasma"},
             "domain": {"data": "cars", "field": "plane_year"}
         }
     ],
     "axes": [
         {
             "orient": "left", "zindex": 1,
-            "scale": "taxiin", "title": "Taxi In",
-            "offset": {"scale": "ord", "value": "taxiin", "mult": -1}
+            "scale": "flight_month", "title": "Mês",
+            "offset": {"scale": "ord", "value": "flight_month", "mult": -1}
         },
         {
             "orient": "left", "zindex": 1,
-            "scale": "distance", "title": "Distance",
+            "scale": "distance", "title": "Distância",
             "offset": {"scale": "ord", "value": "distance", "mult": -1}
         },
         {
             "orient": "left", "zindex": 1,
-            "scale": "plane_year", "title": "Plane Year",
-            "offset": {"scale": "ord", "value": "plane_year", "mult": -1}
+            "scale": "airtime", "title": "Tempo voo",
+            "offset": {"scale": "ord", "value": "airtime", "mult": -1}
         },
-    ]
+        {
+            "orient": "left", "zindex": 1,
+            "scale": "delay", "title": "Delay",
+            "offset": {"scale": "ord", "value": "delay", "mult": -1}
+        },
+        // {
+        //     "orient": "left", "zindex": 1,
+        //     "scale": "plane_year", "title": "Ano",
+        //     "offset": {"scale": "ord", "value": "plane_year", "mult": -1}
+        // },
+    ],
 
     "marks": [
         {
@@ -340,13 +389,114 @@ const spec3: vega.Spec = {
                                 "scale": {"datum": "data"},
                                 "field": {"parent": {"datum": "data"}}
                             },
-                            "stroke": {"value": "steelblue"},
+                            "stroke": { "value": "steelblue" },
                             "strokeWidth": {"value": 1.01},
-                            "strokeOpacity": {"value": 0.3}
+                            "strokeOpacity": {"value": 0.3},
                         }
                     }
                 }
             ]
         }
     ]
+}
+
+
+const query_scatter_plot = {
+    type: "querycore",
+    query: "SELECT arrdelay, depdelay, airtime FROM flights_2008_7M where mod(rowid, 5000) = 1"
+} as any;
+
+const spec4: vega.Spec = {
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 500,
+  "height": 400,
+  "padding": 5,
+
+  "data": [
+    {
+      "name": "source",
+      "transform": [ query_scatter_plot ]
+    }
+  ],
+
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "round": true,
+      "nice": true,
+      "zero": true,
+      "domain": {"data": "source", "field": "arrdelay"},
+      "range": "width"
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "round": true,
+      "nice": true,
+      "zero": true,
+      "domain": {"data": "source", "field": "depdelay"},
+      "range": "height"
+    },
+    {
+      "name": "size",
+      "type": "linear",
+      "round": true,
+      "nice": false,
+      "zero": true,
+      "domain": {"data": "source", "field": "airtime"},
+        "range": [0, 538]
+    }
+  ],
+
+  "axes": [
+    {
+      "scale": "x",
+      "grid": true,
+      "domain": false,
+      "orient": "bottom",
+      "tickCount": 10,
+      "title": "Arrival Delay"
+    },
+    {
+      "scale": "y",
+      "grid": true,
+      "domain": false,
+      "orient": "left",
+      "titlePadding": 10,
+      "title": "Departure Delay"
+    }
+  ],
+
+  "legends": [
+    {
+      "size": "size",
+      "title": "Airtime",
+      "format": "s",
+      "symbolStrokeColor": "#4682b4",
+      "symbolStrokeWidth": 2,
+      "symbolOpacity": 0.5,
+      "symbolType": "circle"
+    }
+  ],
+
+  "marks": [
+    {
+      "name": "marks",
+      "type": "symbol",
+      "from": {"data": "source"},
+      "encode": {
+        "update": {
+          "x": {"scale": "x", "field": "arrdelay"},
+          "y": {"scale": "y", "field": "depdelay"},
+          "size": {"scale": "size", "field": "airtime"},
+          "shape": {"value": "circle"},
+          "strokeWidth": {"value": 2},
+          "opacity": {"value": 0.5},
+          "stroke": {"value": "#4682b4"},
+          "fill": {"value": "transparent"}
+        }
+      }
+    }
+  ]
 }
