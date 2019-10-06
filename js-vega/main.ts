@@ -104,8 +104,8 @@ const query_origin_state = {
 
 const spec: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 400,
-    "height": 200,
+    "width": 500,
+    "height": 300,
     "padding": 5,
 
     "data": [
@@ -160,7 +160,7 @@ const spec: vega.Spec = {
                     "y2": { "scale": "yscale", "value": 0 }
                 },
                 "update": {
-                    "fill": { "value": "steelblue" }
+                    "fill": { "value": "green" }
                 },
                 "hover": {
                     "fill": { "value": "red" }
@@ -213,21 +213,20 @@ const spec2: vega.Spec = {
             "name": "xscale",
             "domain": { "data": "table", "field": "flight_month" },
             "range": "width",
-            // "padding": 0.05,
             "round": true
         },
         {
             "name": "yscale",
             "type": "band",
             "domain": { "data": "table", "field": "flight_dayofmonth" },
-            "nice": true,
+            // "nice": true,
             "range": "height",
-            "zero": false,
+            // "zero": false,
         },
         {
             "name": "color",
             "type": "linear",
-            "range": { "scheme": "YellowOrangeRed" },
+            "range": { "scheme": "greens" } // "redpurple" },
             "domain": { "data": "table", "field": "temp" },
             "zero": false, "nice": true
         }
@@ -241,6 +240,7 @@ const spec2: vega.Spec = {
             // "values": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
             "bandPosition": 0,
             "domain": false,
+            "title": "Mês",
             "ticks": false,
         },
         {
@@ -249,6 +249,16 @@ const spec2: vega.Spec = {
             // "labels": false,
             "domain": false,
             "ticks": false,
+        }
+    ],
+    "legends": [
+        {
+            "fill": "color",
+            "type": "gradient",
+            "title": "Avg. Atraso partida",
+            "titleFontSize": 12,
+            "titlePadding": 4,
+            "gradientLength": {"signal": "height - 16"}
         }
     ],
 
@@ -281,13 +291,13 @@ const query_coordenadas_paralelas = {
 
 const spec3: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 400,
-    "height": 300,
+    "width": 500,
+    "height": 400,
     "padding": 5,
     "config": {
         "axisY": {
             "titleX": -2,
-            "titleY": 310,
+            "titleY": 410,
             "titleAngle": 0,
             "titleAlign": "right",
             "titleBaseline": "top"
@@ -306,7 +316,6 @@ const spec3: vega.Spec = {
                 "flight_month",
                 "distance",
                 "airtime",
-                // "plane_year",
                 "delay",
             ]
         }
@@ -338,11 +347,10 @@ const spec3: vega.Spec = {
             "range": "height", "zero": false, "nice": true,
             "domain": { "data": "cars", "field": "delay" }
         },
-        // colors doesn't work.
         {
-            "name": "plane_year", "type": "linear",
-            // "zero": false, "nice": true, 
-            "range": { "scheme": "plasma" },
+            "name": "plane_year",
+            "type": "ordinal",
+            "range": { "scheme": "tableau20" },
             "domain": { "data": "cars", "field": "plane_year" }
         }
     ],
@@ -367,11 +375,15 @@ const spec3: vega.Spec = {
             "scale": "delay", "title": "Delay",
             "offset": { "scale": "ord", "value": "delay", "mult": -1 }
         },
-        // {
-        //     "orient": "left", "zindex": 1,
-        //     "scale": "plane_year", "title": "Ano",
-        //     "offset": {"scale": "ord", "value": "plane_year", "mult": -1}
-        // },
+    ],
+    "legends": [
+        {
+            "fill": "plane_year",
+            "title": "Ano Aeronave",
+            "symbolStrokeWidth": 2,
+            "symbolOpacity": 0.7,
+            "symbolType": "circle",
+        }
     ],
 
     "marks": [
@@ -389,9 +401,12 @@ const spec3: vega.Spec = {
                                 "scale": { "datum": "data" },
                                 "field": { "parent": { "datum": "data" } }
                             },
-                            "stroke": { "value": "steelblue" },
+                            "stroke": {
+                                "scale": "plane_year",
+                                "field": { "parent": "plane_year" }
+                            },
                             "strokeWidth": { "value": 1.01 },
-                            "strokeOpacity": { "value": 0.3 },
+                            "strokeOpacity": { "value": 0.5 },
                         }
                     }
                 }
@@ -450,8 +465,8 @@ const spec4: vega.Spec = {
         {
             "name": "color",
             "type": "ordinal",
-            "domain": {"data": "source", "field": "category"},
-            "range": {"scheme": "plasma"}
+            "domain": { "data": "source", "field": "category" },
+            "range": { "scheme": "tableau20" }
         }
     ],
 
