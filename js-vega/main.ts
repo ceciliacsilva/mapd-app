@@ -97,6 +97,29 @@ connection.connectAsync().then(session => {
     window["view4"] = view;
 });
 
+connection.connectAsync().then(session => {
+
+    // assign session to OmniSci Core transform
+    QueryCore.session(session);
+
+    // add core transforms
+    (vega as any).transforms["querycore"] = QueryCore;
+
+    const runtime = vega.parse(spec5);
+    const view = new vega.View(runtime)
+        .logLevel(vega.Info)
+        .renderer("svg")
+        .initialize(document.querySelector("#view5"));
+
+    view.runAsync();
+
+    // assign view and vega to window so we can debug them
+    window["vega"] = vega;
+    window["view4"] = view;
+});
+
+
+
 const query_origin_state = {
     type: "querycore",
     query: "select origin_state as category, count(origin_state) as amount from flights_2008_7M GROUP BY origin_state ORDER BY COUNT(origin_state) DESC LIMIT 10"
@@ -226,7 +249,7 @@ const spec2: vega.Spec = {
         {
             "name": "color",
             "type": "linear",
-            "range": { "scheme": "greens" } // "redpurple" },
+            "range": { "scheme": "greens" }, // "redpurple" },
             "domain": { "data": "table", "field": "temp" },
             "zero": false, "nice": true
         }
@@ -524,6 +547,90 @@ const spec4: vega.Spec = {
                     "fill": { "scale": "color", "field": "category" },
                 }
             }
+        }
+    ]
+}
+
+const query_hexagonal_map = {
+    type: "querycore",
+    // query: "SELECT reg_hex_horiz_pixel_bin_x(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0,897,647) as x, reg_hex_horiz_pixel_bin_y(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0,897,647) as y, count(*) as cnt FROM flights_2008_10k WHERE ((origin_lon >= -157 AND origin_lon <= 157) AND (origin_lat >= -63 AND origin_lat <= 81)) GROUP BY x, y"
+    query: "SELECT origin_lon as x, origin_lat as y, count(*) as cnt FROM flights_2008_10k group by x, y"
+} as any;
+
+const spec5: vega.Spec = {
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 897,
+    "height": 647,
+    "data": [
+        {
+            "name": "heatmap_query",
+            "transform": [query_hexagonal_map]
+        },
+        {
+            "name": "heatmap_stats",
+            "source": "heatmap_query",
+            "transform": [
+                {
+                    "type": "aggregate",
+                    "fields": ["cnt", "cnt"],
+                    "ops":    ["min", "max"],
+                    "as":     ["mincnt", "maxcnt"]
+                }
+            ]
+        }
+    ],
+    "scales": [
+        {
+            "name": "heat_color",
+            "type": "quantize",
+            "domain": {"data": "heatmap_stats", "fields": ["mincnt", "maxcnt"]},
+            "range": { "scheme": "greens" },
+            "reverse": true
+            // "range": ["#115f9a", "#1984c5", "#22a7f0", "#48b5c4", "#76c68f",
+            //           "#a6d75b", "#c9e52f", "#d0ee11", "#d0f400"
+            //          ]
+        }
+    ],
+    "marks": [
+        {
+            "type": "symbol",
+            "from": {
+                "data": "heatmap_query"
+            },
+            "encode": {
+                "update": {
+                    "shape": { "value": "circle" },
+                    // "shape": { "value": "hexagon"}, 
+                    "xc": {
+                        "field": "x"
+                    },
+                    "yc": {
+                        "field": "y"
+                    },
+                    // "width": 9.9667,
+                    // "height": 11.5085,
+                    "size": { "value": 100 },//"scale": "size", "field": "airtime" },
+                    "fill": {
+                        "scale": "heat_color",
+                        "field": "cnt"
+                    }
+                }
+            }
+            // "properties": {
+            //     "shape": "hexagon-horiz",
+            //     "xc": {
+            //         "field": "x"
+            //     },
+            //     "yc": {
+            //         "field": "y"
+            //     },
+            //     "width": 9.9667,
+            //     "height": 11.5085,
+            //     "fillColor": {
+            //         "scale": "heat_color",
+            //         "field": "cnt"
+            //     }
+            // }
         }
     ]
 }
