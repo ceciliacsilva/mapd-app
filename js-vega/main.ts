@@ -122,7 +122,7 @@ connection.connectAsync().then(session => {
 
 const query_origin_state = {
     type: "querycore",
-    query: "select origin_state as category, count(origin_state) as amount from flights_2008_7M GROUP BY origin_state ORDER BY COUNT(origin_state) DESC LIMIT 10"
+    query: "select origin_state as category, count(origin_state) + COUNT(dest_state) as amount from flights_2008_7M GROUP BY origin_state ORDER BY COUNT(origin_state) + COUNT(dest_state) DESC LIMIT 10"
 } as any;
 
 const spec: vega.Spec = {
@@ -215,13 +215,13 @@ const spec: vega.Spec = {
 const query_arrival_delay = {
     type: "querycore",
     // query: "select avg(arrdelay) as temp, flight_dayofmonth - 1, flight_month - 1 from flights_2008_7M group by flight_dayofmonth, flight_month"
-    query: "select avg(arrdelay) as temp, flight_dayofmonth, flight_month from flights_2008_7M group by flight_dayofmonth, flight_month"
+    query: "select avg(depdelay) as temp, flight_dayofmonth, flight_month - 1 as flight_month from flights_2008_7M group by flight_dayofmonth, flight_month"
 } as any;
 
 const spec2: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 600,
-    "height": 400,
+    "width": 500,
+    "height": 300,
     "padding": 5,
 
     "data": [
@@ -259,9 +259,10 @@ const spec2: vega.Spec = {
         {
             "orient": "bottom",
             "scale": "xscale",
-            "labels": true,
-            // "values": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
-            "bandPosition": 0,
+            // "labels": true,
+            // "format": "~s",
+            "labels": { "text": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] },
+            // "values": [2,3,4,5,6,7,8,9,10,11,12,13],
             "domain": false,
             "title": "Mês",
             "ticks": false,
@@ -278,9 +279,10 @@ const spec2: vega.Spec = {
         {
             "fill": "color",
             "type": "gradient",
-            "title": "Avg. Atraso partida",
+            // "title": "Atraso médio mensal (partida)",
+            "title": "avg"
             "titleFontSize": 12,
-            "titlePadding": 4,
+            // "titlePadding": 5,
             "gradientLength": {"signal": "height - 16"}
         }
     ],
@@ -292,7 +294,7 @@ const spec2: vega.Spec = {
             "encode": {
                 "enter": {
                     "x": { "scale": "xscale", "field": "flight_month" },
-                    "width": { "value": 50 },
+                    "width": { "value": 45 },
                     "y": { "scale": "yscale", "field": "flight_dayofmonth" },
                     "height": { "scale": "yscale", "band": 1 },
                     "tooltip": { "signal": "{'month': datum.flight_month}" }
@@ -309,7 +311,7 @@ const query_coordenadas_paralelas = {
     type: "querycore",
     // query: "SELECT flight_month, distance, plane_year FROM flights_2008_7M GROUP BY flight_month, distance, plane_year limit 200"
     // query: "SELECT flight_month, avg(distance) as avg_distance, AVG(airtime) as avg_airtime, AVG(arrdelay) + AVG(depdelay) as avg_delay, SUM(cancelled) as sum_cancelled FROM flights_2008_7M GROUP BY flight_month"
-    query: "SELECT flight_month, distance, airtime, arrdelay + depdelay as delay, plane_year FROM flights_2008_7M where MOD(rowid, 20000) = 1"
+    query: "SELECT flight_month, distance, airtime, arrdelay + depdelay as delay, carrier_name, plane_year FROM flights_2008_7M where MOD(rowid, 30000) = 1 AND distance > 0 AND airtime > 0 AND arrdelay IS NOT NULL AND depdelay IS NOT NULL AND plane_year IS NOT NULL ORDER BY plane_year"
 } as any;
 
 const spec3: vega.Spec = {
@@ -336,10 +338,11 @@ const spec3: vega.Spec = {
         {
             "name": "fields",
             "values": [
-                "flight_month",
+                "plane_year",
+                "delay",
                 "distance",
                 "airtime",
-                "delay",
+                "flight_month",
             ]
         }
     ],
@@ -349,6 +352,11 @@ const spec3: vega.Spec = {
             "name": "ord", "type": "point",
             "range": "width", "round": true,
             "domain": { "data": "fields", "field": "data" }
+        },
+        {
+            "name": "plane_year", "type": "linear",
+            "range": "height", "zero": false, "nice": true,
+            "domain": { "data": "cars", "field": "plane_year" }
         },
         {
             "name": "flight_month", "type": "linear",
@@ -371,13 +379,18 @@ const spec3: vega.Spec = {
             "domain": { "data": "cars", "field": "delay" }
         },
         {
-            "name": "plane_year",
+            "name": "carrier_name",
             "type": "ordinal",
-            "range": { "scheme": "tableau20" },
-            "domain": { "data": "cars", "field": "plane_year" }
+            "range": { "scheme": "category20"}, //"tableau20" },
+            "domain": { "data": "cars", "field": "carrier_name" }
         }
     ],
     "axes": [
+        {
+            "orient": "left", "zindex": 1,
+            "scale": "plane_year", "title": "Mês",
+            "offset": { "scale": "ord", "value": "plane_year", "mult": -1 }
+        },
         {
             "orient": "left", "zindex": 1,
             "scale": "flight_month", "title": "Mês",
@@ -395,14 +408,14 @@ const spec3: vega.Spec = {
         },
         {
             "orient": "left", "zindex": 1,
-            "scale": "delay", "title": "Delay",
+            "scale": "delay", "title": "Delay Total",
             "offset": { "scale": "ord", "value": "delay", "mult": -1 }
         },
     ],
     "legends": [
         {
-            "fill": "plane_year",
-            "title": "Ano Aeronave",
+            "fill": "carrier_name",
+            "title": "Companhia Aérea",
             "symbolStrokeWidth": 2,
             "symbolOpacity": 0.7,
             "symbolType": "circle",
@@ -425,11 +438,11 @@ const spec3: vega.Spec = {
                                 "field": { "parent": { "datum": "data" } }
                             },
                             "stroke": {
-                                "scale": "plane_year",
-                                "field": { "parent": "plane_year" }
+                                "scale": "carrier_name",
+                                "field": { "parent": "carrier_name" }
                             },
                             "strokeWidth": { "value": 1.01 },
-                            "strokeOpacity": { "value": 0.5 },
+                            "strokeOpacity": { "value": 0.7 },
                         }
                     }
                 }
@@ -441,7 +454,7 @@ const spec3: vega.Spec = {
 
 const query_scatter_plot = {
     type: "querycore",
-    query: "SELECT arrdelay, depdelay, airtime, carrier_name as category FROM flights_2008_7M where mod(rowid, 5000) = 1"
+    query: "SELECT arrdelay, depdelay, airtime, carrier_name as category FROM flights_2008_7M where mod(rowid, 30000) = 1"
 } as any;
 
 const spec4: vega.Spec = {
