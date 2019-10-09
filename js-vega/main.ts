@@ -115,10 +115,30 @@ connection.connectAsync().then(session => {
 
     // assign view and vega to window so we can debug them
     window["vega"] = vega;
-    window["view4"] = view;
+    window["view5"] = view;
 });
 
 
+connection.connectAsync().then(session => {
+
+    // assign session to OmniSci Core transform
+    QueryCore.session(session);
+
+    // add core transforms
+    (vega as any).transforms["querycore"] = QueryCore;
+
+    const runtime = vega.parse(spec6);
+    const view = new vega.View(runtime)
+        .logLevel(vega.Info)
+        .renderer("svg")
+        .initialize(document.querySelector("#view6"));
+
+    view.runAsync();
+
+    // assign view and vega to window so we can debug them
+    window["vega"] = vega;
+    window["view6"] = view;
+});
 
 const query_origin_state = {
     type: "querycore",
@@ -127,8 +147,8 @@ const query_origin_state = {
 
 const spec: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 500,
-    "height": 300,
+    "width": 400,
+    "height": 100,
     "padding": 5,
 
     "data": [
@@ -167,8 +187,15 @@ const spec: vega.Spec = {
     ],
 
     "axes": [
-        { "orient": "bottom", "scale": "xscale" },
-        { "orient": "left", "scale": "yscale" }
+        {
+            "title": "Estado",
+            "orient": "bottom",
+            "scale": "xscale" },
+        {
+            "orient": "left",
+            "scale": "yscale",
+            "format": "~s"
+        }
     ],
 
     "marks": [
@@ -183,7 +210,7 @@ const spec: vega.Spec = {
                     "y2": { "scale": "yscale", "value": 0 }
                 },
                 "update": {
-                    "fill": { "value": "green" }
+                    "fill": { "value": "#357890" }
                 },
                 "hover": {
                     "fill": { "value": "red" }
@@ -220,8 +247,8 @@ const query_arrival_delay = {
 
 const spec2: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 500,
-    "height": 300,
+    "width": 350,
+    "height": 250,
     "padding": 5,
 
     "data": [
@@ -249,7 +276,7 @@ const spec2: vega.Spec = {
         {
             "name": "color",
             "type": "linear",
-            "range": { "scheme": "greens" }, // "redpurple" },
+            "range": { "scheme": "blues" } // "greens" }, // "redpurple" },
             "domain": { "data": "table", "field": "temp" },
             "zero": false, "nice": true
         }
@@ -293,7 +320,7 @@ const spec2: vega.Spec = {
             "encode": {
                 "enter": {
                     "x": { "scale": "xscale", "field": "flight_month" },
-                    "width": { "value": 45 },
+                    "width": { "value": 31 },
                     "y": { "scale": "yscale", "field": "flight_dayofmonth" },
                     "height": { "scale": "yscale", "band": 1 },
                     "tooltip": { "signal": "{'month': datum.flight_month}" }
@@ -313,13 +340,13 @@ const query_coordenadas_paralelas = {
 
 const spec3: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 500,
-    "height": 400,
+    "width": 400,
+    "height": 300,
     "padding": 5,
     "config": {
         "axisY": {
             "titleX": -2,
-            "titleY": 410,
+            "titleY": 310,
             "titleAngle": 0,
             "titleAlign": "right",
             "titleBaseline": "top"
@@ -456,8 +483,8 @@ const query_scatter_plot = {
 
 const spec4: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 500,
-    "height": 400,
+    "width": 400,
+    "height": 300,
     "padding": 5,
 
     "data": [
@@ -510,7 +537,7 @@ const spec4: vega.Spec = {
             "domain": false,
             "orient": "bottom",
             "tickCount": 10,
-            "title": "Arrival Delay"
+            "title": "Delay chegada"
         },
         {
             "scale": "y",
@@ -518,7 +545,7 @@ const spec4: vega.Spec = {
             "domain": false,
             "orient": "left",
             "titlePadding": 10,
-            "title": "Departure Delay"
+            "title": "Delay partida"
         }
     ],
 
@@ -561,8 +588,8 @@ const spec4: vega.Spec = {
     ]
 }
 
-const width = 897;
-const height = 647;
+const width = 598;
+const height = 431;
 
 const query_hexagonal_map = {
     type: "querycore",
@@ -570,7 +597,7 @@ const query_hexagonal_map = {
         // signal: `'SELECT reg_hex_horiz_pixel_bin_x(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0, ${width}, ${height}) as x, reg_hex_horiz_pixel_bin_y(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0, ${width}, ${height}) as y, count(*) as cnt FROM flights_2008_10k WHERE ((origin_lon >= -157 AND origin_lon <= 157) AND (origin_lat >= -63 AND origin_lat <= 81)) GROUP BY x, y'`
     // }
     // query: "SELECT origin_lon as x, origin_lat as y, count(*) as cnt FROM flights_2008_10k group by x, y"
-    "query": "SELECT rect_pixel_bin(conv_4326_900913_x(origin_lon), -13847031.457875465, -7451726.712679257, 733, 733) as x, rect_pixel_bin(conv_4326_900913_y(origin_lat), 2346114.147993467, 6970277.197053557, 530, 530) as y, COUNT(1) as cnt FROM flights_2008_7M WHERE (origin_lon >= -124.39000000000038 AND origin_lon <= -66.93999999999943) AND (origin_lat >= 20.61570573311549 AND origin_lat <= 52.93117449504004) GROUP BY x, y"
+    query: "SELECT rect_pixel_bin(conv_4326_900913_x(origin_lon), -13847031.457875465, -7451726.712679257, 733, 733) as x, rect_pixel_bin(conv_4326_900913_y(origin_lat), 2346114.147993467, 6970277.197053557, 530, 530) as y, COUNT(1) as cnt FROM flights_2008_7M WHERE (origin_lon >= -124.39000000000038 AND origin_lon <= -66.93999999999943) AND (origin_lat >= 20.61570573311549 AND origin_lat <= 52.93117449504004) GROUP BY x, y"
 } as any;
 
 const spec5: vega.Spec = {
@@ -622,16 +649,16 @@ const spec5: vega.Spec = {
         },
         {
             "name": "heat_color",
-            "type": "quantize",
+            "type": "pow",
             "domain": {"data": "heatmap_stats", "fields": ["mincnt", "maxcnt"]},
-            "range": { "scheme": "greens" },
+            "range": { "scheme": "blues" }, //"lightgreyteal" }// "greens" },
             "reverse": true
         },
         {
             "name": "heat_size",
-            "type": "quantize",
+            "type": "pow",
             "domain": {"data": "heatmap_stats", "fields": ["mincnt", "maxcnt"]},
-            "range": [200, 900],
+            "range": [20, 300],
         }
     ],
     "marks": [
@@ -659,5 +686,85 @@ const spec5: vega.Spec = {
                 }
             }
         }
+    ]
+}
+
+const query_deptime = {
+    type: "querycore",
+    query: " SELECT deptime AS category, count(1) AS amount FROM flights_2008_7M WHERE deptime IS NOT NULL GROUP BY deptime ORDER BY deptime"
+    // query: "select origin_state as category, count(origin_state) + COUNT(dest_state) as amount from flights_2008_7M GROUP BY origin_state ORDER BY COUNT(origin_state) + COUNT(dest_state) DESC LIMIT 10"
+} as any;
+
+const spec6: vega.Spec = {
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 400,
+    "height": 100,
+    "padding": 5,
+
+    "data": [
+        {
+            "name": "table",
+            "transform": [query_deptime]
+        }
+    ],
+
+    "scales": [
+        {
+            "name": "xscale",
+            // "type": "point",
+            "type": "linear",
+            "domain": { "data": "table", "field": "category" },
+            "range": "width",
+            // "padding": 0.05,
+            // "round": true
+        },
+        {
+            "name": "yscale",
+            "type": "linear",
+            "domain": { "data": "table", "field": "amount" },
+            "nice": true,
+            "range": "height"
+        }
+    ],
+
+    "axes": [
+        {
+            "title": "Horas",
+            "orient": "bottom",
+            "scale": "xscale",
+            "tickCount": 12,
+            "encode":
+            {
+                "labels":
+                {
+                    "update":
+                    {
+                        "text": { "signal": "(datum.value / 100)" }
+                        // ["00:00", "02:00", "04:00", "06:00", "08:00", "10:00", "11:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00", "24:00"]
+                    }
+                }
+            }
+        },
+        {
+            "orient": "left",
+            "scale": "yscale",
+            "format": "~s"
+        }
+    ],
+
+    "marks": [
+        {
+            "type": "line",
+            "from": { "data": "table" },
+            "encode": {
+                "enter": {
+                    "x": { "scale": "xscale", "field": "category" },
+                    "y": { "scale": "yscale", "field": "amount" },
+                },
+                "update": {
+                    "stroke": { "value": "#357890" }
+                },
+            }
+        },
     ]
 }

@@ -1,9 +1,32 @@
 body {
   font-family: sans-serif;
   margin: 0 auto;
-  max-width: 800px;
+  max-width: 1250px;
 }
 
 .vega-bind-name {
   margin-right: 1em;
+}
+
+
+* {
+    box-sizing: border-box;
+}
+/* Create two equal columns that floats next to each other */
+.column {
+    float: left;
+    width: 50%;
+    padding: 10px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+div.centralize {
+    display: table;
+    margin: 0 auto;
 }
