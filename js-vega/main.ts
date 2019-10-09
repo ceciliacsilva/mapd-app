@@ -259,9 +259,8 @@ const spec2: vega.Spec = {
         {
             "orient": "bottom",
             "scale": "xscale",
-            // "labels": true,
-            // "format": "~s",
-            "labels": { "text": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] },
+            "labels": true,
+            // "labels": { "text": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] },
             // "values": [2,3,4,5,6,7,8,9,10,11,12,13],
             "domain": false,
             "title": "Mês",
@@ -279,10 +278,10 @@ const spec2: vega.Spec = {
         {
             "fill": "color",
             "type": "gradient",
-            // "title": "Atraso médio mensal (partida)",
-            "title": "avg"
-            "titleFontSize": 12,
-            // "titlePadding": 5,
+            "title": "AVG",
+            // "direction": "horizontal",
+            "orient": "left"
+            "titlePadding": 5,
             "gradientLength": {"signal": "height - 16"}
         }
     ],
@@ -309,8 +308,6 @@ const spec2: vega.Spec = {
 
 const query_coordenadas_paralelas = {
     type: "querycore",
-    // query: "SELECT flight_month, distance, plane_year FROM flights_2008_7M GROUP BY flight_month, distance, plane_year limit 200"
-    // query: "SELECT flight_month, avg(distance) as avg_distance, AVG(airtime) as avg_airtime, AVG(arrdelay) + AVG(depdelay) as avg_delay, SUM(cancelled) as sum_cancelled FROM flights_2008_7M GROUP BY flight_month"
     query: "SELECT flight_month, distance, airtime, arrdelay + depdelay as delay, carrier_name, plane_year FROM flights_2008_7M where MOD(rowid, 30000) = 1 AND distance > 0 AND airtime > 0 AND arrdelay IS NOT NULL AND depdelay IS NOT NULL AND plane_year IS NOT NULL ORDER BY plane_year"
 } as any;
 
@@ -564,16 +561,22 @@ const spec4: vega.Spec = {
     ]
 }
 
+const width = 897;
+const height = 647;
+
 const query_hexagonal_map = {
     type: "querycore",
-    // query: "SELECT reg_hex_horiz_pixel_bin_x(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0,897,647) as x, reg_hex_horiz_pixel_bin_y(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0,897,647) as y, count(*) as cnt FROM flights_2008_10k WHERE ((origin_lon >= -157 AND origin_lon <= 157) AND (origin_lat >= -63 AND origin_lat <= 81)) GROUP BY x, y"
-    query: "SELECT origin_lon as x, origin_lat as y, count(*) as cnt FROM flights_2008_10k group by x, y"
+    // query: {
+        // signal: `'SELECT reg_hex_horiz_pixel_bin_x(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0, ${width}, ${height}) as x, reg_hex_horiz_pixel_bin_y(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0, ${width}, ${height}) as y, count(*) as cnt FROM flights_2008_10k WHERE ((origin_lon >= -157 AND origin_lon <= 157) AND (origin_lat >= -63 AND origin_lat <= 81)) GROUP BY x, y'`
+    // }
+    // query: "SELECT origin_lon as x, origin_lat as y, count(*) as cnt FROM flights_2008_10k group by x, y"
+    "query": "SELECT rect_pixel_bin(conv_4326_900913_x(origin_lon), -13847031.457875465, -7451726.712679257, 733, 733) as x, rect_pixel_bin(conv_4326_900913_y(origin_lat), 2346114.147993467, 6970277.197053557, 530, 530) as y, COUNT(1) as cnt FROM flights_2008_7M WHERE (origin_lon >= -124.39000000000038 AND origin_lon <= -66.93999999999943) AND (origin_lat >= 20.61570573311549 AND origin_lat <= 52.93117449504004) GROUP BY x, y"
 } as any;
 
 const spec5: vega.Spec = {
     "$schema": "https://vega.github.io/schema/vega/v5.json",
-    "width": 897,
-    "height": 647,
+    "width": width,
+    "height": height,
     "data": [
         {
             "name": "heatmap_query",
@@ -590,18 +593,45 @@ const spec5: vega.Spec = {
                     "as":     ["mincnt", "maxcnt"]
                 }
             ]
+        },
+        {
+            "name": "map_size",
+            "source": "heatmap_query",
+            "transform": [
+                {
+                    "type": "aggregate",
+                    "fields": ["x", "x", "y", "y"],
+                    "ops":    ["min", "max", "min", "max"],
+                    "as":     ["minx", "maxx", "miny", "maxy"]
+                }
+            ]
         }
     ],
     "scales": [
+        {
+            "name": "xscale",
+            "type": "linear",
+            "domain": {"data": "map_size", "fields": ["minx", "maxx"]},
+            "range": "width"
+        },
+        {
+            "name": "yscale",
+            "type": "linear",
+            "domain": {"data": "map_size", "fields": ["miny", "maxy"]},
+            "range": "height"
+        },
         {
             "name": "heat_color",
             "type": "quantize",
             "domain": {"data": "heatmap_stats", "fields": ["mincnt", "maxcnt"]},
             "range": { "scheme": "greens" },
             "reverse": true
-            // "range": ["#115f9a", "#1984c5", "#22a7f0", "#48b5c4", "#76c68f",
-            //           "#a6d75b", "#c9e52f", "#d0ee11", "#d0f400"
-            //          ]
+        },
+        {
+            "name": "heat_size",
+            "type": "quantize",
+            "domain": {"data": "heatmap_stats", "fields": ["mincnt", "maxcnt"]},
+            "range": [200, 900],
         }
     ],
     "marks": [
@@ -613,37 +643,21 @@ const spec5: vega.Spec = {
             "encode": {
                 "update": {
                     "shape": { "value": "circle" },
-                    // "shape": { "value": "hexagon"}, 
                     "xc": {
+                        "scale": "xscale",
                         "field": "x"
                     },
                     "yc": {
+                        "scale": "yscale",
                         "field": "y"
                     },
-                    // "width": 9.9667,
-                    // "height": 11.5085,
-                    "size": { "value": 100 },//"scale": "size", "field": "airtime" },
+                    "size": { "scale": "heat_size", "field": "cnt" },
                     "fill": {
                         "scale": "heat_color",
                         "field": "cnt"
                     }
                 }
             }
-            // "properties": {
-            //     "shape": "hexagon-horiz",
-            //     "xc": {
-            //         "field": "x"
-            //     },
-            //     "yc": {
-            //         "field": "y"
-            //     },
-            //     "width": 9.9667,
-            //     "height": 11.5085,
-            //     "fillColor": {
-            //         "scale": "heat_color",
-            //         "field": "cnt"
-            //     }
-            // }
         }
     ]
 }
