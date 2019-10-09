@@ -1,4 +1,4 @@
 js-vega/node_modules
 js-vega/dist
-js-vega/*.lock
 js-vega/.cache/*
+js-vega/package-lock.json
