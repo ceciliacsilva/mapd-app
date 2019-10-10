@@ -588,8 +588,8 @@ const spec4: vega.Spec = {
     ]
 }
 
-const width = 598;
-const height = 431;
+const width = 399;
+const height = 287;
 
 const query_hexagonal_map = {
     type: "querycore",
@@ -632,6 +632,12 @@ const spec5: vega.Spec = {
                     "as":     ["minx", "maxx", "miny", "maxy"]
                 }
             ]
+        }
+    ],
+    "projections": [
+        {
+            "name": "merc",
+            "type": "mercator",
         }
     ],
     "scales": [
