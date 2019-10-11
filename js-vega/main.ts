@@ -356,7 +356,7 @@ const spec3: vega.Spec = {
 
     "data": [
         {
-            "name": "cars",
+            "name": "table",
             "transform": [query_coordenadas_paralelas]
         },
         {
@@ -380,39 +380,39 @@ const spec3: vega.Spec = {
         {
             "name": "plane_year", "type": "linear",
             "range": "height", "zero": false, "nice": true,
-            "domain": { "data": "cars", "field": "plane_year" }
+            "domain": { "data": "table", "field": "plane_year" }
         },
         {
             "name": "flight_month", "type": "linear",
             "range": "height", "zero": false, "nice": true,
-            "domain": { "data": "cars", "field": "flight_month" }
+            "domain": { "data": "table", "field": "flight_month" }
         },
         {
             "name": "distance", "type": "linear",
             "range": "height", "zero": false, "nice": true,
-            "domain": { "data": "cars", "field": "distance" }
+            "domain": { "data": "table", "field": "distance" }
         },
         {
             "name": "airtime", "type": "linear",
             "range": "height", "zero": false, "nice": true,
-            "domain": { "data": "cars", "field": "airtime" }
+            "domain": { "data": "table", "field": "airtime" }
         },
         {
             "name": "delay", "type": "linear",
             "range": "height", "zero": false, "nice": true,
-            "domain": { "data": "cars", "field": "delay" }
+            "domain": { "data": "table", "field": "delay" }
         },
         {
             "name": "carrier_name",
             "type": "ordinal",
             "range": { "scheme": "category20"}, //"tableau20" },
-            "domain": { "data": "cars", "field": "carrier_name" }
+            "domain": { "data": "table", "field": "carrier_name" }
         }
     ],
     "axes": [
         {
             "orient": "left", "zindex": 1,
-            "scale": "plane_year", "title": "Mês",
+            "scale": "plane_year", "title": "Ano(Aero)",
             "offset": { "scale": "ord", "value": "plane_year", "mult": -1 }
         },
         {
@@ -449,7 +449,7 @@ const spec3: vega.Spec = {
     "marks": [
         {
             "type": "group",
-            "from": { "data": "cars" },
+            "from": { "data": "table" },
             "marks": [
                 {
                     "type": "line",
@@ -593,11 +593,9 @@ const height = 287;
 
 const query_hexagonal_map = {
     type: "querycore",
-    // query: {
-        // signal: `'SELECT reg_hex_horiz_pixel_bin_x(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0, ${width}, ${height}) as x, reg_hex_horiz_pixel_bin_y(conv_4326_900913_x(origin_lon),conv_4326_900913_x(-157),conv_4326_900913_x(157),conv_4326_900913_y(origin_lat),conv_4326_900913_y(-63),conv_4326_900913_y(81),9.9667,11.5085,0,0, ${width}, ${height}) as y, count(*) as cnt FROM flights_2008_10k WHERE ((origin_lon >= -157 AND origin_lon <= 157) AND (origin_lat >= -63 AND origin_lat <= 81)) GROUP BY x, y'`
-    // }
-    // query: "SELECT origin_lon as x, origin_lat as y, count(*) as cnt FROM flights_2008_10k group by x, y"
-    query: "SELECT rect_pixel_bin(conv_4326_900913_x(origin_lon), -13847031.457875465, -7451726.712679257, 733, 733) as x, rect_pixel_bin(conv_4326_900913_y(origin_lat), 2346114.147993467, 6970277.197053557, 530, 530) as y, COUNT(1) as cnt FROM flights_2008_7M WHERE (origin_lon >= -124.39000000000038 AND origin_lon <= -66.93999999999943) AND (origin_lat >= 20.61570573311549 AND origin_lat <= 52.93117449504004) GROUP BY x, y"
+    query: {
+        signal: `'SELECT rect_pixel_bin(conv_4326_900913_x(origin_lon), -13847031.457875465, -7451726.712679257, ${width}, ${width}) as x, rect_pixel_bin(conv_4326_900913_y(origin_lat), 2346114.147993467, 6970277.197053557, ${height}, ${height}) as y, COUNT(1) as cnt FROM flights_2008_7M WHERE (origin_lon >= -124.39000000000038 AND origin_lon <= -66.93999999999943) AND (origin_lat >= 20.61570573311549 AND origin_lat <= 52.93117449504004) GROUP BY x, y'`
+    }
 } as any;
 
 const spec5: vega.Spec = {
@@ -697,7 +695,7 @@ const spec5: vega.Spec = {
 
 const query_deptime = {
     type: "querycore",
-    query: " SELECT deptime AS category, count(1) AS amount FROM flights_2008_7M WHERE deptime IS NOT NULL GROUP BY deptime ORDER BY deptime"
+    query: "SELECT deptime AS category, count(1) AS amount FROM flights_2008_7M WHERE deptime IS NOT NULL GROUP BY deptime ORDER BY deptime"
     // query: "select origin_state as category, count(origin_state) + COUNT(dest_state) as amount from flights_2008_7M GROUP BY origin_state ORDER BY COUNT(origin_state) + COUNT(dest_state) DESC LIMIT 10"
 } as any;
 
