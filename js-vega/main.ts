@@ -158,17 +158,6 @@ const spec: vega.Spec = {
         }
     ],
 
-    "signals": [
-        {
-            "name": "tooltip",
-            "value": {},
-            "on": [
-                { "events": "rect:mouseover", "update": "datum" },
-                { "events": "rect:mouseout", "update": "{}" }
-            ]
-        }
-    ],
-
     "scales": [
         {
             "name": "xscale",
@@ -212,30 +201,8 @@ const spec: vega.Spec = {
                 "update": {
                     "fill": { "value": "#357890" }
                 },
-                "hover": {
-                    "fill": { "value": "red" }
-                }
             }
         },
-        {
-            "type": "text",
-            "encode": {
-                "enter": {
-                    "align": { "value": "center" },
-                    "baseline": { "value": "bottom" },
-                    "fill": { "value": "#333" }
-                },
-                "update": {
-                    "x": { "scale": "xscale", "signal": "tooltip.category", "band": 0.5 },
-                    "y": { "scale": "yscale", "signal": "tooltip.amount", "offset": -2 },
-                    "text": { "signal": "tooltip.amount" },
-                    "fillOpacity": [
-                        { "test": "isNaN(tooltip.amount)", "value": 0 },
-                        { "value": 1 }
-                    ]
-                }
-            }
-        }
     ]
 }
 
